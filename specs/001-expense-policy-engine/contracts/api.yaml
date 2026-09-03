@@ -1,0 +1,242 @@
+openapi: 3.0.3
+info:
+  title: Corporate Expense Reimbursement & Policy Engine API
+  version: 0.1.0
+  description: >
+    Thin transport contract (constitution Article III.1). Every route below does
+    request/response (de)serialization only and delegates all decisioning to the
+    policy engine described in policy-engine-contract.md.
+paths:
+  /claims:
+    post:
+      summary: Submit a new expense claim (FR-001, US1)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaimSubmission'
+      responses:
+        '201':
+          description: Claim accepted and evaluated (auto_approved or pending_review)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpenseClaim'
+        '422':
+          description: Invalid input — zero/negative amount, malformed date, missing required field, or malformed/unsafe input (FR-014, spec Edge Cases)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+    get:
+      summary: List the authenticated employee's own claims (FR-012, US3)
+      responses:
+        '200':
+          description: Claim history for the requesting employee
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExpenseClaim'
+
+  /claims/{claimId}:
+    get:
+      summary: Get a single claim's current status and violation reasons (FR-012)
+      parameters:
+        - name: claimId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: The claim
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpenseClaim'
+        '404':
+          description: Claim not found
+    put:
+      summary: Edit a submitted claim; re-triggers full policy evaluation (FR-016)
+      parameters:
+        - name: claimId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaimSubmission'
+      responses:
+        '200':
+          description: Claim re-evaluated with updated status/violations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpenseClaim'
+
+  /claims/{claimId}/withdraw:
+    post:
+      summary: Employee withdraws their own claim while it is still awaiting review (FR-020, US3)
+      parameters:
+        - name: claimId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Claim withdrawn; status set to withdrawn and removed from the review queue
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpenseClaim'
+        '409':
+          description: Claim is no longer withdrawable — it already left pending_review/needs_information (e.g., a reviewer decision was recorded first, FR-019) or is not owned by the requester
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+  /review-queue:
+    get:
+      summary: List claims awaiting reviewer action (FR-008, US2)
+      responses:
+        '200':
+          description: Claims in pending_review or needs_information status, with violation reasons
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExpenseClaim'
+
+  /claims/{claimId}/decisions:
+    post:
+      summary: Reviewer approves, rejects, or requests more information on a claim (FR-008..FR-011, FR-018, FR-019, US2)
+      parameters:
+        - name: claimId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewDecisionInput'
+      responses:
+        '200':
+          description: Decision recorded; claim status updated and employee notified (FR-011)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpenseClaim'
+        '403':
+          description: Requesting reviewer is the claim's own submitter — self-review is blocked (FR-018)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '409':
+          description: Claim already left pending_review/needs_information — a decision (or withdrawal) was already recorded (FR-019)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '422':
+          description: Missing required rejection reason (FR-009)
+
+  /claims/{claimId}/audit-trail:
+    get:
+      summary: Retrieve the full audit history of policy evaluations for a claim (FR-017)
+      parameters:
+        - name: claimId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Append-only list of audit log entries for the claim
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuditLogEntry'
+
+components:
+  schemas:
+    ClaimSubmission:
+      type: object
+      required: [category, amount, expense_date]
+      properties:
+        category: { type: string }
+        amount: { type: number, format: decimal }
+        description: { type: string }
+        expense_date: { type: string, format: date }
+        receipt_attached: { type: boolean, default: false }
+
+    ExpenseClaim:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        submitter_id: { type: string }
+        category: { type: string }
+        amount: { type: number, format: decimal }
+        description: { type: string }
+        expense_date: { type: string, format: date }
+        submission_date: { type: string, format: date-time }
+        receipt_attached: { type: boolean }
+        status:
+          type: string
+          enum: [auto_approved, pending_review, approved, rejected, needs_information, withdrawn]
+        violations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ViolationReason'
+
+    ViolationReason:
+      type: object
+      properties:
+        code:
+          type: string
+          enum: [over_category_cap, missing_required_receipt, weekend_policy_violation, possible_duplicate, late_submission, uncapped_category, exceeds_auto_approval_threshold]
+        detail: { type: string }
+
+    ReviewDecisionInput:
+      type: object
+      required: [decision]
+      properties:
+        decision:
+          type: string
+          enum: [approved, rejected, needs_information]
+        reason:
+          type: string
+          description: Required when decision is "rejected" (FR-009)
+
+    AuditLogEntry:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        claim_id: { type: string, format: uuid }
+        evaluated_at: { type: string, format: date-time }
+        rules_evaluated:
+          type: array
+          items: { type: string }
+        outcome:
+          type: string
+          enum: [auto_approved, pending_review]
+        violations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ViolationReason'
+
+    ValidationError:
+      type: object
+      properties:
+        error_code: { type: string }
+        message: { type: string }
