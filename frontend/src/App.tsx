@@ -5,8 +5,8 @@ import { ClaimHistoryPage } from './pages/ClaimHistoryPage'
 export function App() {
   return (
     <div className="min-h-screen bg-slate-50">
-      <nav className="border-b bg-white px-4 py-3">
-        <div className="mx-auto flex max-w-xl gap-4 text-sm font-medium">
+      <nav className="border-b bg-white px-4 py-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-3xl gap-6 text-sm font-medium">
           <NavLink
             to="/"
             end

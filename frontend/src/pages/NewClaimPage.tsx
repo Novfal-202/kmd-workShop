@@ -48,18 +48,18 @@ export function NewClaimPage() {
         : 'idle'
 
   return (
-    <div className="mx-auto max-w-xl space-y-6 p-4">
+    <div className="mx-auto max-w-3xl space-y-8 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
       <h1 className="text-xl font-semibold">Submit a new expense claim</h1>
 
       {needsReauth && (
-        <div role="alert" className="rounded border border-amber-300 bg-amber-50 p-3 text-sm">
+        <div role="alert" className="rounded border border-amber-300 bg-amber-50 p-4 text-sm">
           Your session has expired. Please sign in again — your entered claim details are still
           here and will not be lost.
         </div>
       )}
 
       {phase === 'failed' && (
-        <div role="alert" className="flex items-center justify-between rounded border border-red-300 bg-red-50 p-3 text-sm">
+        <div role="alert" className="flex items-center justify-between rounded border border-red-300 bg-red-50 p-4 text-sm">
           <span>{(submitClaimMutation.error as ApiError | null)?.message ?? 'Submission failed.'}</span>
           <button type="button" onClick={handleRetry} className="ml-3 rounded bg-red-600 px-3 py-1 text-white">
             Retry
@@ -68,7 +68,7 @@ export function NewClaimPage() {
       )}
 
       {phase === 'succeeded' && submitClaimMutation.data && (
-        <div className="space-y-2 rounded border p-3">
+        <div className="space-y-2 rounded border p-4">
           <StatusBadge badge={mapClaimToStatusBadge(submitClaimMutation.data)} />
           {submitClaimMutation.data.violations.length > 0 && (
             <div className="flex flex-wrap gap-2">
@@ -80,22 +80,24 @@ export function NewClaimPage() {
         </div>
       )}
 
-      <ClaimForm
-        defaultValues={
-          lastDraft ?? (persistedDraft ? { ...persistedDraft } : undefined)
-        }
-        submitting={phase === 'submitting'}
-        uploadReceipt={uploadReceipt}
-        onFieldsChange={(values) => {
-          saveDraft({
-            amount: values.amount ?? '',
-            category: values.category ?? '',
-            expenseDate: values.expenseDate ?? '',
-            description: values.description,
-          })
-        }}
-        onSubmit={handleSubmit}
-      />
+      <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <ClaimForm
+          defaultValues={
+            lastDraft ?? (persistedDraft ? { ...persistedDraft } : undefined)
+          }
+          submitting={phase === 'submitting'}
+          uploadReceipt={uploadReceipt}
+          onFieldsChange={(values) => {
+            saveDraft({
+              amount: values.amount ?? '',
+              category: values.category ?? '',
+              expenseDate: values.expenseDate ?? '',
+              description: values.description,
+            })
+          }}
+          onSubmit={handleSubmit}
+        />
+      </div>
     </div>
   )
 }

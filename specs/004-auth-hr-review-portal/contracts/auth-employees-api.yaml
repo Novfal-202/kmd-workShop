@@ -1,0 +1,123 @@
+openapi: 3.0.3
+info:
+  title: Authentication and Employee-Review API (additive extension for 004)
+  version: 0.1.0
+  description: >
+    New backend surface required by spec 004. Does not modify any existing endpoint or schema
+    in specs/001-expense-policy-engine/contracts/api.yaml or
+    specs/002-expense-portal-ui/contracts/receipts-api.yaml. Existing routes
+    (POST /claims, GET /claims, POST /claims/{claimId}/decisions, etc.) are unchanged in shape;
+    they now resolve the caller's identity from the session cookie these routes issue, instead of
+    a hardcoded constant.
+paths:
+  /auth/login:
+    post:
+      summary: Sign in with a username and password, receiving a session cookie (FR-001, FR-002, FR-004)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: { type: string }
+                password: { type: string }
+      responses:
+        '200':
+          description: >
+            Sign-in succeeded. The session token is set as an httpOnly cookie (not present in this
+            body); the body only tells the client which portal to route to.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionInfo'
+        '401':
+          description: Invalid username or password — a single generic message, never indicating which was wrong (FR-004)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+  /auth/logout:
+    post:
+      summary: End the current session (FR-005)
+      responses:
+        '204':
+          description: Session cookie cleared
+
+  /auth/me:
+    get:
+      summary: Return the current session's identity, if any (used on page load to restore/route a session, FR-006)
+      responses:
+        '200':
+          description: A valid session is present
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionInfo'
+        '401':
+          description: No valid session (missing or expired cookie) — the client shows the sign-in screen
+
+  /employees:
+    get:
+      summary: List employees who have submitted at least one claim (FR-008, HR-only)
+      responses:
+        '200':
+          description: Employee list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EmployeeListEntry'
+        '403':
+          description: Caller is not signed in as an HR account (FR-003)
+
+  /employees/{employeeId}/claims:
+    get:
+      summary: List one employee's submitted claims, for HR review (FR-009, HR-only)
+      parameters:
+        - name: employeeId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: >
+            The employee's claims — identical shape to the existing GET /claims response
+            (specs/001-expense-policy-engine/contracts/api.yaml ExpenseClaim), scoped to the given
+            employee rather than the caller.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: 'https://example.invalid/001-api.yaml#/components/schemas/ExpenseClaim'
+        '403':
+          description: Caller is not signed in as an HR account (FR-003)
+        '404':
+          description: No such employee (no claim history under that id)
+
+components:
+  schemas:
+    SessionInfo:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: [employee, hr]
+        display_name: { type: string }
+
+    EmployeeListEntry:
+      type: object
+      properties:
+        employee_id: { type: string }
+        display_name: { type: string }
+        claim_count: { type: integer }
+
+    ValidationError:
+      type: object
+      properties:
+        error_code: { type: string }
+        message: { type: string }
