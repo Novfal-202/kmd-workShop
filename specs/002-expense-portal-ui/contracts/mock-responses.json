@@ -1,0 +1,187 @@
+{
+  "$description": "Mock backend responses for verifying the 4 portal status-rendering states (spec.md FR-008/FR-009/FR-017) before wiring to the live API. Shapes follow specs/001-expense-policy-engine/contracts/api.yaml (ExpenseClaim / ValidationError schemas).",
+  "$status_mapping_used_for_these_mocks": {
+    "note": "Backend only distinguishes auto_approved | pending_review | rejected | needs_information | approved | withdrawn (see api.yaml). The portal-facing 'Requires Manager' vs 'Audit Flagged' split is a UI presentation decision (spec.md Assumptions) — these mocks use a simple heuristic so all 4 badge states can be exercised: a pending_review claim maps to 'Audit Flagged' if it carries a possible_duplicate, late_submission, or uncapped_category violation (integrity/compliance concerns), otherwise it maps to 'Requires Manager' (routine cap/receipt/weekend/threshold checks). Confirm/replace this heuristic when the real mapping is finalized in /speckit-plan.",
+    "auto_approved": "Auto-Approved",
+    "pending_review (routine)": "Requires Manager",
+    "pending_review (integrity/compliance)": "Audit Flagged",
+    "rejected / 422": "Rejected"
+  },
+  "mocks": [
+    {
+      "id": "auto-approved-1",
+      "ui_status": "Auto-Approved",
+      "scenario": "Simple weekday meal claim, valid receipt, well within cap",
+      "http_status": 201,
+      "body": {
+        "id": "3f3f0e2e-1a1a-4b4b-9c9c-000000000001",
+        "submitter_id": "emp-1024",
+        "category": "meals",
+        "amount": 42.50,
+        "description": "Team lunch with client",
+        "expense_date": "2026-09-02",
+        "submission_date": "2026-09-06T14:12:00Z",
+        "receipt_attached": true,
+        "status": "auto_approved",
+        "violations": []
+      }
+    },
+    {
+      "id": "auto-approved-2",
+      "ui_status": "Auto-Approved",
+      "scenario": "Low-value office supplies claim, no receipt required at this amount",
+      "http_status": 201,
+      "body": {
+        "id": "3f3f0e2e-1a1a-4b4b-9c9c-000000000002",
+        "submitter_id": "emp-1024",
+        "category": "supplies",
+        "amount": 8.99,
+        "description": "Notebook and pens",
+        "expense_date": "2026-09-04",
+        "submission_date": "2026-09-06T14:20:00Z",
+        "receipt_attached": false,
+        "status": "auto_approved",
+        "violations": []
+      }
+    },
+    {
+      "id": "requires-manager-1",
+      "ui_status": "Requires Manager",
+      "scenario": "Amount is compliant with all rules but exceeds the auto-approval threshold",
+      "http_status": 201,
+      "body": {
+        "id": "3f3f0e2e-1a1a-4b4b-9c9c-000000000003",
+        "submitter_id": "emp-1024",
+        "category": "travel",
+        "amount": 610.00,
+        "description": "Flight for client on-site visit",
+        "expense_date": "2026-09-01",
+        "submission_date": "2026-09-06T09:05:00Z",
+        "receipt_attached": true,
+        "status": "pending_review",
+        "violations": [
+          {
+            "code": "exceeds_auto_approval_threshold",
+            "detail": "Amount $610.00 exceeds the $500.00 auto-approval threshold"
+          }
+        ]
+      }
+    },
+    {
+      "id": "requires-manager-2",
+      "ui_status": "Requires Manager",
+      "scenario": "Receipt missing above the receipt-required threshold; otherwise routine",
+      "http_status": 201,
+      "body": {
+        "id": "3f3f0e2e-1a1a-4b4b-9c9c-000000000004",
+        "submitter_id": "emp-1024",
+        "category": "entertainment",
+        "amount": 95.00,
+        "description": "Client dinner",
+        "expense_date": "2026-09-03",
+        "submission_date": "2026-09-06T18:40:00Z",
+        "receipt_attached": false,
+        "status": "pending_review",
+        "violations": [
+          {
+            "code": "missing_required_receipt",
+            "detail": "Receipt required for amounts at or above $75.00"
+          }
+        ]
+      }
+    },
+    {
+      "id": "audit-flagged-1",
+      "ui_status": "Audit Flagged",
+      "scenario": "Possible duplicate of a prior claim (same amount/category/date)",
+      "http_status": 201,
+      "body": {
+        "id": "3f3f0e2e-1a1a-4b4b-9c9c-000000000005",
+        "submitter_id": "emp-1024",
+        "category": "meals",
+        "amount": 42.50,
+        "description": "Team lunch with client",
+        "expense_date": "2026-09-02",
+        "submission_date": "2026-09-06T20:15:00Z",
+        "receipt_attached": true,
+        "status": "pending_review",
+        "violations": [
+          {
+            "code": "possible_duplicate",
+            "detail": "Matches an existing claim with the same amount, category, and expense date"
+          }
+        ]
+      }
+    },
+    {
+      "id": "audit-flagged-2",
+      "ui_status": "Audit Flagged",
+      "scenario": "Compound violation: over cap, weekend-dated, and submitted very late",
+      "http_status": 201,
+      "body": {
+        "id": "3f3f0e2e-1a1a-4b4b-9c9c-000000000006",
+        "submitter_id": "emp-1024",
+        "category": "entertainment",
+        "amount": 340.00,
+        "description": "Weekend client event",
+        "expense_date": "2026-05-30",
+        "submission_date": "2026-09-06T11:00:00Z",
+        "receipt_attached": true,
+        "status": "pending_review",
+        "violations": [
+          {
+            "code": "over_category_cap",
+            "detail": "Amount $340.00 exceeds the entertainment category cap of $150.00"
+          },
+          {
+            "code": "weekend_policy_violation",
+            "detail": "Expense dated Saturday 2026-05-30 is not in an exempted category"
+          },
+          {
+            "code": "late_submission",
+            "detail": "Submitted 99 days after the expense date, exceeding the 90-day limit"
+          }
+        ]
+      }
+    },
+    {
+      "id": "rejected-1",
+      "ui_status": "Rejected",
+      "scenario": "Reviewer rejected a previously flagged claim with a stated reason",
+      "http_status": 200,
+      "body": {
+        "id": "3f3f0e2e-1a1a-4b4b-9c9c-000000000007",
+        "submitter_id": "emp-1024",
+        "category": "entertainment",
+        "amount": 500.00,
+        "description": "Personal celebration dinner",
+        "expense_date": "2026-08-20",
+        "submission_date": "2026-08-21T10:00:00Z",
+        "receipt_attached": true,
+        "status": "rejected",
+        "violations": [
+          {
+            "code": "over_category_cap",
+            "detail": "Amount $500.00 exceeds the entertainment category cap of $150.00"
+          }
+        ],
+        "review_decision": {
+          "reviewer_id": "mgr-204",
+          "decision": "rejected",
+          "reason": "Not a business-related expense per company policy",
+          "decided_at": "2026-08-22T15:30:00Z"
+        }
+      }
+    },
+    {
+      "id": "rejected-2",
+      "ui_status": "Rejected",
+      "scenario": "Submission rejected outright at input validation (invalid amount) — never reaches policy evaluation",
+      "http_status": 422,
+      "body": {
+        "error_code": "invalid_amount",
+        "message": "Amount must be greater than zero"
+      }
+    }
+  ]
+}

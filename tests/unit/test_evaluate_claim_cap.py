@@ -18,3 +18,18 @@ def test_amount_over_cap_flags_violation_and_pending_review(rule_set):
     result = evaluate_claim(claim, rule_set, prior_claims=[], submission_date=now_utc())
     assert result.status == ClaimStatus.PENDING_REVIEW
     assert any(v.code == ViolationCode.OVER_CATEGORY_CAP for v in result.violations)
+
+
+def test_differently_cased_category_within_cap_has_no_cap_violation(rule_set):
+    claim = make_claim_input(category="meals", amount=Decimal("50.00"))
+    result = evaluate_claim(claim, rule_set, prior_claims=[], submission_date=now_utc())
+    assert all(v.code != ViolationCode.OVER_CATEGORY_CAP for v in result.violations)
+    assert all(v.code != ViolationCode.UNCAPPED_CATEGORY for v in result.violations)
+
+
+def test_differently_cased_category_over_cap_flags_violation(rule_set):
+    claim = make_claim_input(category="MEALS", amount=Decimal("65.00"), receipt_attached=True)
+    result = evaluate_claim(claim, rule_set, prior_claims=[], submission_date=now_utc())
+    assert result.status == ClaimStatus.PENDING_REVIEW
+    assert any(v.code == ViolationCode.OVER_CATEGORY_CAP for v in result.violations)
+    assert all(v.code != ViolationCode.UNCAPPED_CATEGORY for v in result.violations)

@@ -1,0 +1,77 @@
+openapi: 3.0.3
+info:
+  title: Receipt Attachment API (additive extension for the Expense Portal Web UI)
+  version: 0.1.0
+  description: >
+    New backend surface required by spec 002 FR-004/FR-005/FR-006. Does not modify
+    any existing endpoint or schema in specs/001-expense-policy-engine/contracts/api.yaml.
+    ClaimSubmission there gains one new optional field, `receipt_id`, populated from
+    this endpoint's response; `receipt_attached` continues to mean the same thing.
+paths:
+  /receipts:
+    post:
+      summary: Upload a receipt file, or register a receipt link, ahead of claim submission (FR-004)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Accepted types and max size enforced both client-side (FR-005) and server-side.
+          application/json:
+            schema:
+              type: object
+              required: [url]
+              properties:
+                url:
+                  type: string
+                  format: uri
+      responses:
+        '201':
+          description: Receipt accepted and assigned an id for later reference on claim submission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReceiptReference'
+        '422':
+          description: Unsupported file type, file too large, or malformed URL (FR-005)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+  /receipts/{receiptId}:
+    delete:
+      summary: Remove a previously attached receipt before the claim it belongs to is submitted (FR-006)
+      parameters:
+        - name: receiptId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '204':
+          description: Receipt removed
+        '404':
+          description: Receipt not found or already consumed by a submitted claim
+
+components:
+  schemas:
+    ReceiptReference:
+      type: object
+      properties:
+        receipt_id: { type: string, format: uuid }
+        kind:
+          type: string
+          enum: [file, link]
+        filename_or_url: { type: string }
+
+    ValidationError:
+      type: object
+      properties:
+        error_code: { type: string }
+        message: { type: string }

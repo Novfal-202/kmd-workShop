@@ -47,7 +47,7 @@ def evaluate_claim(
     # 1 & 2. over_category_cap / uncapped_category (FR-002, FR-015)
     rules_evaluated.append(ViolationCode.OVER_CATEGORY_CAP.value)
     rules_evaluated.append(ViolationCode.UNCAPPED_CATEGORY.value)
-    cap = rule_set.category_caps.get(claim.category)
+    cap = rule_set.get_category_cap(claim.category)
     if cap is None:
         violations.append(
             ViolationReason(
@@ -79,9 +79,8 @@ def evaluate_claim(
 
     # 4. weekend_policy_violation (FR-004)
     rules_evaluated.append(ViolationCode.WEEKEND_POLICY_VIOLATION.value)
-    if (
-        claim.expense_date.isoweekday() in WEEKEND_ISO_WEEKDAYS
-        and claim.category not in rule_set.weekend_exempt_categories
+    if claim.expense_date.isoweekday() in WEEKEND_ISO_WEEKDAYS and not rule_set.is_weekend_exempt(
+        claim.category
     ):
         violations.append(
             ViolationReason(

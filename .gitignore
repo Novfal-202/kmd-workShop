@@ -18,6 +18,14 @@ htmlcov/
 *.db
 *.sqlite3
 
+# Node.js / frontend
+node_modules/
+frontend/dist/
+frontend/build/
+frontend/coverage/
+*.log
+npm-debug.log*
+
 # Environment
 .env
 .env.*

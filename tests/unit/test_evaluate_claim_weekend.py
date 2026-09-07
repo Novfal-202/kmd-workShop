@@ -28,3 +28,11 @@ def test_sunday_expense_in_exempt_category_is_not_flagged(rule_set):
     )
     result = evaluate_claim(claim, rule_set, prior_claims=[], submission_date=now_utc())
     assert all(v.code != ViolationCode.WEEKEND_POLICY_VIOLATION for v in result.violations)
+
+
+def test_saturday_expense_in_differently_cased_exempt_category_is_not_flagged(rule_set):
+    claim = make_claim_input(
+        category="travel", amount=Decimal("80.00"), expense_date=SATURDAY, receipt_attached=True
+    )
+    result = evaluate_claim(claim, rule_set, prior_claims=[], submission_date=now_utc())
+    assert all(v.code != ViolationCode.WEEKEND_POLICY_VIOLATION for v in result.violations)
