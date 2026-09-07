@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { claimFormSchema, RECEIPT_REQUIRED_THRESHOLD } from '../../src/lib/validationSchema'
 
 const validBase = {
+  employeeName: 'Jane Employee',
   amount: '25.00',
   category: 'meals',
   expenseDate: '2026-01-01',
@@ -27,6 +28,11 @@ describe('claimFormSchema', () => {
 
   it('rejects a non-numeric amount', () => {
     const result = claimFormSchema.safeParse({ ...validBase, amount: 'abc' })
+    expect(result.success).toBe(false)
+  })
+
+  it('rejects a missing employee name', () => {
+    const result = claimFormSchema.safeParse({ ...validBase, employeeName: '' })
     expect(result.success).toBe(false)
   })
 

@@ -37,6 +37,7 @@ export interface ExpenseClaimApiResponse {
   submission_date: string
   receipt_attached: boolean
   receipt_id?: string
+  employee_name?: string
   status: ClaimStatus | string
   violations: ViolationReasonApi[]
   review_decision?: ReviewDecisionApi
@@ -49,6 +50,7 @@ export interface ClaimSubmissionRequest {
   expense_date: string
   receipt_attached: boolean
   receipt_id?: string
+  employee_name: string
 }
 
 export interface ApiValidationError {

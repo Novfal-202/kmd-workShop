@@ -8,6 +8,14 @@
 
 **Input**: User description: "Build a modern React + Tailwind web UI for the Corporate Expense Portal. Allow employees to input expense details, upload/link receipts, submit claims to the backend API, and view real-time policy evaluation status (Auto-Approved, Requires Manager, Audit Flagged, Rejected) with visual violation badges and dynamic field validation."
 
+## Clarifications
+
+### Session 2026-09-07
+
+- Q: Should employees type their name into the new-claim form now, as a temporary stand-in until the separate sign-in feature ships, or should the form wait to get the employee's name automatically once login is built? → A: Add it now as a plain "Your name" field on the claim form, independent of the separate sign-in/HR-portal effort, which will be scoped and delivered on its own timeline.
+- Q: Should the claim history view keep its current card/list presentation or switch to a table layout? → A: Switch to a table — one row per claim, with a column per attribute (employee name, amount, category, date, status, violations).
+- Q: When reducing page whitespace, does that mean the excess empty page area around/below content, or the padding/margins inside the form and table (added to fix the earlier "no margin, cramped" complaint)? → A: The excess empty page area around/below content — the padding/margins inside the form and table stay as they are; the page itself should not appear to have a disproportionate amount of blank space around a comparatively short page.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Employee Submits an Expense Claim Through the Portal (Priority: P1)
@@ -90,7 +98,7 @@ An employee views a list of all claims they have submitted through the portal, e
 
 ### Functional Requirements
 
-- **FR-001**: The portal MUST provide a claim submission form capturing, at minimum: amount, expense category, date the expense was incurred, and a receipt (uploaded file or linked URL, optional per backend policy).
+- **FR-001**: The portal MUST provide a claim submission form capturing, at minimum: the employee's name, amount, expense category, date the expense was incurred, and a receipt (uploaded file or linked URL, optional per backend policy).
 - **FR-002**: The portal MUST validate form fields dynamically (as the employee types or moves between fields) and surface field-specific error/warning messages before submission, without requiring a round-trip to the backend for basic format checks (e.g., non-numeric amount, empty required field, future-dated expense).
 - **FR-003**: The portal MUST disable claim submission while any known field-level validation error is present.
 - **FR-004**: The portal MUST allow attaching a receipt either by uploading a file or by pasting a link, and MUST show a confirmation (filename, thumbnail, or validated link) before submission.
@@ -102,15 +110,19 @@ An employee views a list of all claims they have submitted through the portal, e
 - **FR-010**: The portal MUST prevent duplicate submission of the same claim (e.g., from a double-click or repeated submit action) while a submission is in flight.
 - **FR-011**: The portal MUST display a distinct in-progress ("submitting"/"awaiting decision") state between submission and receipt of the backend's evaluation result.
 - **FR-012**: The portal MUST display a clear, actionable error message (distinct from any policy-status badge) when the submission request fails due to a network or server error, and MUST allow the employee to retry without losing entered field values.
-- **FR-013**: The portal MUST provide a claim history view listing all claims submitted by the currently signed-in employee, each showing amount, category, expense date, current status badge, and violation reason(s) if any.
+- **FR-013**: The portal MUST provide a claim history view, presented as a table (one row per claim), listing all claims submitted by the currently signed-in employee, each row showing the employee name, amount, category, expense date, current status badge, and violation reason(s) if any.
+- **FR-018**: The portal MUST require a non-empty employee name before allowing claim submission, captured directly on the claim form; this is an interim capture mechanism, independent of and not blocked by the separate sign-in feature that will eventually supply this identity automatically.
 - **FR-014**: The portal MUST reflect status updates made later by a reviewer (e.g., a flagged claim subsequently approved or rejected) the next time the claim history is loaded or refreshed.
 - **FR-015**: The portal MUST remain usable — submission, attachment, and status/history viewing — on both desktop and mobile-width screens.
 - **FR-016**: The portal MUST preserve entered but unsubmitted form data if the employee's session expires mid-entry, and MUST prompt re-authentication rather than discarding the draft.
 - **FR-017**: The portal MUST render an unrecognized/unknown backend status as a generic "Pending Review" state, including the raw status/reason text, rather than failing to display or misrepresenting it as one of the four known outcomes.
+- **FR-019**: The portal MUST give each claim history table row enough vertical spacing that its status badge and violation tag(s) read as clearly separated from adjacent rows, rather than appearing crowded or overlapping.
+- **FR-020**: The portal MUST present the claim form's submit action as a visually integrated part of the form (e.g., directly attached to the fields above it) rather than as an isolated element surrounded by excess empty space.
+- **FR-021**: The portal MUST NOT surround page content with a disproportionate amount of empty page area on taller viewports, while preserving the comfortable internal spacing within the form and table established by FR-015's mobile/desktop usability requirement.
 
 ### Key Entities
 
-- **Expense Claim (UI representation)**: The employee-facing view of a claim — amount, category, expense date, receipt reference (file or link), current status badge, violation reason(s), and submission timestamp.
+- **Expense Claim (UI representation)**: The employee-facing view of a claim — employee name, amount, category, expense date, receipt reference (file or link), current status badge, violation reason(s), and submission timestamp.
 - **Status Badge**: A visual indicator mapping a backend evaluation outcome to one of "Auto-Approved," "Requires Manager," "Audit Flagged," "Rejected," or a fallback "Pending Review" state.
 - **Violation Indicator**: A visual tag representing a single policy violation reason attached to a claim (e.g., "over category cap," "missing receipt," "weekend policy").
 - **Receipt Attachment**: Either an uploaded file (with type/size constraints) or a pasted link, associated with a single claim.
@@ -130,7 +142,7 @@ An employee views a list of all claims they have submitted through the portal, e
 
 - The backend expense-claim API (per the existing Corporate Expense Reimbursement & Policy Engine feature) already exposes endpoints to submit a claim, receive a policy evaluation outcome, and list an employee's claim history; this feature is the web client consuming that API, not a redefinition of it.
 - The four portal-facing status labels ("Auto-Approved," "Requires Manager," "Audit Flagged," "Rejected") are presentation-layer labels the portal maps from whatever status values the backend returns (e.g., `auto_approved`, `pending_review`, `needs_information`/manager escalation, `rejected`); exact backend-to-label mapping is a design detail resolved during planning, not a business ambiguity.
-- Employee identity/authentication is provided by an existing corporate sign-in system; this feature assumes a signed-in employee context is available and does not define the login mechanism itself.
+- Employee identity/authentication is provided by an existing corporate sign-in system; this feature assumes a signed-in employee context is available and does not define the login mechanism itself. Until that sign-in feature ships, the employee's name is captured directly on the claim form (FR-001, FR-018) as an interim measure; this typed name is not itself an authentication mechanism.
 - Receipt file constraints (accepted types, maximum size) follow reasonable common defaults (e.g., image and PDF formats, a modest size cap) unless the backend policy configuration specifies otherwise.
 - "Requires Manager" and "Audit Flagged" are treated as two distinct non-auto-approved outcomes the backend can return (e.g., routine manager review vs. a more serious audit-flagged violation); this feature displays whichever distinct statuses the backend provides without altering the underlying review workflow.
 - Only the currently signed-in employee's own claims are shown in their claim history; any reviewer/manager-facing review queue or dashboard is out of scope for this feature (it is covered by the existing backend/reviewer capability, not this employee-facing portal).

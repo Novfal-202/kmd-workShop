@@ -107,56 +107,65 @@ export function ReceiptAttachment({ value, onChange, uploadReceipt }: ReceiptAtt
   }
 
   return (
-    <div className="space-y-2">
-      <div className="flex gap-2 text-sm">
-        <button
-          type="button"
-          className={`rounded px-3 py-1 ${mode === 'file' ? 'bg-slate-800 text-white' : 'bg-slate-100'}`}
-          onClick={() => setMode('file')}
-        >
-          Upload file
-        </button>
-        <button
-          type="button"
-          className={`rounded px-3 py-1 ${mode === 'link' ? 'bg-slate-800 text-white' : 'bg-slate-100'}`}
-          onClick={() => setMode('link')}
-        >
-          Paste link
-        </button>
-      </div>
-
-      {mode === 'file' && !value && (
-        <input
-          ref={fileInputRef}
-          type="file"
-          aria-label="Receipt file"
-          accept={ALLOWED_FILE_TYPES.join(',')}
-          onChange={(e) => {
-            const file = e.target.files?.[0]
-            if (file) void handleFileSelected(file)
-          }}
-        />
-      )}
-
-      {mode === 'link' && !value && (
-        <div className="flex gap-2">
-          <input
-            type="text"
-            aria-label="Receipt link"
-            placeholder="https://example.com/receipt.pdf"
-            className="flex-1 rounded border px-2 py-1 text-sm"
-            value={linkInput}
-            onChange={(e) => setLinkInput(e.target.value)}
-          />
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-3 text-sm">
+        <div className="flex shrink-0 gap-2">
           <button
             type="button"
-            className="rounded bg-slate-800 px-3 py-1 text-sm text-white"
-            onClick={() => void handleLinkSubmit()}
+            className={`rounded px-3 py-1.5 ${mode === 'file' ? 'bg-slate-800 text-white' : 'bg-slate-100'}`}
+            onClick={() => setMode('file')}
           >
-            Attach
+            Upload file
+          </button>
+          <button
+            type="button"
+            className={`rounded px-3 py-1.5 ${mode === 'link' ? 'bg-slate-800 text-white' : 'bg-slate-100'}`}
+            onClick={() => setMode('link')}
+          >
+            Paste link
           </button>
         </div>
-      )}
+
+        {mode === 'file' && !value && (
+          <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded border border-dashed border-slate-300 px-3 py-1.5 text-slate-600 hover:border-slate-400">
+            <span className="shrink-0 rounded bg-slate-100 px-2 py-0.5 text-xs font-medium">
+              Choose file
+            </span>
+            <span className="truncate text-xs text-slate-500">PNG, JPEG, or PDF — up to 5MB</span>
+            <input
+              ref={fileInputRef}
+              type="file"
+              aria-label="Receipt file"
+              accept={ALLOWED_FILE_TYPES.join(',')}
+              className="sr-only"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) void handleFileSelected(file)
+              }}
+            />
+          </label>
+        )}
+
+        {mode === 'link' && !value && (
+          <div className="flex min-w-0 flex-1 gap-2">
+            <input
+              type="text"
+              aria-label="Receipt link"
+              placeholder="https://example.com/receipt.pdf"
+              className="min-w-0 flex-1 rounded border px-2 py-1.5 text-sm"
+              value={linkInput}
+              onChange={(e) => setLinkInput(e.target.value)}
+            />
+            <button
+              type="button"
+              className="shrink-0 rounded bg-slate-800 px-3 py-1.5 text-sm text-white"
+              onClick={() => void handleLinkSubmit()}
+            >
+              Attach
+            </button>
+          </div>
+        )}
+      </div>
 
       {rejectionMessage && <p className="text-sm text-red-600">{rejectionMessage}</p>}
 

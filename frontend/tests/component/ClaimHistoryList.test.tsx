@@ -9,13 +9,15 @@ const claims = fixtures.mocks
   .map((m) => m.body as ExpenseClaimApiResponse)
 
 describe('ClaimHistoryList', () => {
-  it('renders amount, category, date, status badge, and violation tags for each claim', () => {
+  it('renders as a table with amount, category, date, status badge, and violation tags for each claim', () => {
     render(<ClaimHistoryList claims={claims} />)
 
+    expect(screen.getByRole('table')).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: /employee/i })).toBeInTheDocument()
+
     for (const claim of claims) {
-      expect(
-        screen.getAllByText(new RegExp(`\\$${claim.amount.toFixed(2)}.*${claim.category}`)).length,
-      ).toBeGreaterThan(0)
+      expect(screen.getAllByText(`$${claim.amount.toFixed(2)}`).length).toBeGreaterThan(0)
+      expect(screen.getAllByText(claim.category).length).toBeGreaterThan(0)
       expect(screen.getAllByText(claim.expense_date).length).toBeGreaterThan(0)
     }
 
@@ -24,6 +26,7 @@ describe('ClaimHistoryList', () => {
     }
 
     expect(screen.getAllByRole('status').length).toBe(claims.length)
+    expect(screen.getAllByRole('row')).toHaveLength(claims.length + 1) // +1 header row
   })
 
   it('shows an empty-state message when there are no claims', () => {

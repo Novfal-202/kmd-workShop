@@ -45,6 +45,7 @@ def _evaluate_and_persist(claim_input: ExpenseClaimInput, submitter_id: str) -> 
         expense_date=claim_input.expense_date,
         submission_date=now,
         receipt_attached=claim_input.receipt_attached,
+        employee_name=claim_input.employee_name,
         status=result.status,
         violations=result.violations,
     )
@@ -104,6 +105,7 @@ def edit_claim(claim_id: uuid.UUID, payload: ExpenseClaimInput) -> ExpenseClaim:
         expense_date=payload.expense_date,
         submission_date=now,
         receipt_attached=payload.receipt_attached,
+        employee_name=payload.employee_name or existing.employee_name,
         status=result.status,
         violations=result.violations,
         review_decisions=existing.review_decisions,

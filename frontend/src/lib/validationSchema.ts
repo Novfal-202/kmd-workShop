@@ -26,6 +26,7 @@ function isNotFutureDate(value: string): boolean {
 
 export const claimFormSchema = z
   .object({
+    employeeName: z.string().min(1, 'Your name is required'),
     amount: z
       .string()
       .min(1, 'Amount is required')

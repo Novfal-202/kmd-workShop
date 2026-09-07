@@ -48,6 +48,10 @@ class ExpenseClaimInput(BaseModel):
     description: str = ""
     expense_date: date
     receipt_attached: bool = False
+    # Additive field (002-expense-portal-ui FR-001/FR-018): the portal captures and requires
+    # this client-side as an interim identity capture, pending the separate sign-in feature.
+    # Optional here so existing callers/fixtures that predate this field remain valid.
+    employee_name: str = ""
 
 
 class ExpenseClaim(BaseModel):
@@ -61,6 +65,7 @@ class ExpenseClaim(BaseModel):
     expense_date: date
     submission_date: datetime = Field(default_factory=lambda: datetime.now(UTC))
     receipt_attached: bool = False
+    employee_name: str = ""
     status: ClaimStatus
     violations: list[ViolationReason] = Field(default_factory=list)
     review_decisions: list["ReviewDecision"] = Field(default_factory=list)

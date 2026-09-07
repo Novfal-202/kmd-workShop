@@ -262,3 +262,30 @@ With multiple developers:
 - Verify tests fail before implementing
 - Commit after each task or logical group
 - Stop at any checkpoint to validate story independently
+
+---
+
+## Phase 8: Amendment (2026-09-07) — Interim Employee Name, Table History, and Layout Polish (FR-018..FR-021)
+
+**Purpose**: Two `/speckit-clarify` sessions after original delivery added FR-018 (interim employee-name capture), amended FR-013 (table layout), and added FR-019..FR-021 (claim history row density, submit-button integration, page whitespace balance). See plan.md's "Amendment" section and research.md §9-10.
+
+**Status**: T050-T053 were already implemented (and tested) in response to the first clarify session, before this task list was updated to record them. T054-T059 are the remaining, not-yet-implemented work from the second clarify session.
+
+- [X] T050 [US1] Add `employeeName` (required) to the Zod schema and `<ClaimForm>` in `frontend/src/lib/validationSchema.ts` and `frontend/src/components/ClaimForm.tsx` (FR-001, FR-018)
+- [X] T051 [US1] Add optional, default-`""` `employee_name` field to `ExpenseClaimInput`/`ExpenseClaim` in `src/models/expense_claim.py` (research.md §9)
+- [X] T052 [US1] Add `employee_name` column (with an idempotent `ALTER TABLE` migration guard for the pre-existing dev database) to `src/repositories/claim_repository.py`, and wire it through `src/api/claims_routes.py`
+- [X] T053 [US4] Convert `<ClaimHistoryList>` to an HTML `<table>` with an Employee column in `frontend/src/components/ClaimHistoryList.tsx` (FR-013)
+- [X] T054 [P] [US4] Increase claim history table row vertical padding so status badges and violation tags read as clearly separated between rows (FR-019) in `frontend/src/components/ClaimHistoryList.tsx`
+- [X] T055 [US1] Restyle `<ClaimForm>`'s submit control as a footer bar directly attached to the form's own container, rather than a standalone button separated by its own gap (FR-020) in `frontend/src/components/ClaimForm.tsx`
+- [X] T056 [US1] Reduce `NewClaimPage`'s outer page vertical padding (`py-8`/`sm:py-10`) so the page does not read as mostly empty space, while leaving the card's own internal padding (`p-6`/`sm:p-8`) unchanged (FR-021) in `frontend/src/pages/NewClaimPage.tsx` (depends on T055 for the submit-bar container it wraps)
+- [X] T057 [P] [US4] Reduce `ClaimHistoryPage`'s outer page vertical padding on the same basis as T056 (FR-021) in `frontend/src/pages/ClaimHistoryPage.tsx`
+- [X] T058 [P] Extend `frontend/tests/component/ClaimForm.test.tsx` asserting the submit control renders inside its attached footer-bar container (FR-020)
+- [X] T059 Execute `specs/002-expense-portal-ui/quickstart.md` Scenarios 7-8 end-to-end (against MSW mocks and the real backend) and record results
+
+**Checkpoint**: All FR-018..FR-021 amendment work complete; run the full frontend suite (`npx vitest run`, `npx eslint`, `npx tsc -b`) and the full backend suite (`pytest tests/`, `ruff check`, `black --check`) to confirm no regressions, per constitution Article II.2.
+
+### Amendment Dependencies
+
+- T054, T057, T058 have no dependencies on each other and can run in parallel
+- T056 depends on T055 (it wraps the footer-bar container T055 creates)
+- T059 depends on T054-T058 all being complete

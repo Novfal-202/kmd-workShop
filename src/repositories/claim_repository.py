@@ -43,6 +43,7 @@ claims_table = Table(
     Column("expense_date", Date, nullable=False),
     Column("submission_date", DateTime, nullable=False),
     Column("receipt_attached", Boolean, nullable=False, default=False),
+    Column("employee_name", String, nullable=False, default=""),
     Column("status", String, nullable=False),
     Column("violations_json", Text, nullable=False, default="[]"),
     Column("review_decisions_json", Text, nullable=False, default="[]"),
@@ -83,16 +84,29 @@ def _row_to_claim(row) -> ExpenseClaim:
             else datetime.fromisoformat(row.submission_date)
         ),
         receipt_attached=bool(row.receipt_attached),
+        employee_name=row.employee_name or "",
         status=ClaimStatus(row.status),
         violations=_violations_from_json(row.violations_json),
         review_decisions=_decisions_from_json(row.review_decisions_json),
     )
 
 
+def _ensure_employee_name_column(engine: Engine) -> None:
+    """Idempotent migration for a physical SQLite file created before this column existed
+    (`metadata.create_all` only creates missing tables, it never alters an existing one)."""
+    with engine.begin() as conn:
+        existing_columns = {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(claims)")}
+        if existing_columns and "employee_name" not in existing_columns:
+            conn.exec_driver_sql(
+                "ALTER TABLE claims ADD COLUMN employee_name TEXT NOT NULL DEFAULT ''"
+            )
+
+
 class ClaimRepository:
     def __init__(self, db_engine: Engine = default_engine):
         self._engine = db_engine
         metadata.create_all(self._engine)
+        _ensure_employee_name_column(self._engine)
 
     def create(self, claim: ExpenseClaim) -> ExpenseClaim:
         with self._engine.begin() as conn:
@@ -106,6 +120,7 @@ class ClaimRepository:
                     expense_date=claim.expense_date,
                     submission_date=claim.submission_date,
                     receipt_attached=claim.receipt_attached,
+                    employee_name=claim.employee_name,
                     status=claim.status.value,
                     violations_json=_violations_to_json(claim.violations),
                     review_decisions_json=_decisions_to_json(claim.review_decisions),
@@ -152,6 +167,7 @@ class ClaimRepository:
                     expense_date=claim.expense_date,
                     submission_date=claim.submission_date,
                     receipt_attached=claim.receipt_attached,
+                    employee_name=claim.employee_name,
                     status=claim.status.value,
                     violations_json=_violations_to_json(claim.violations),
                     review_decisions_json=_decisions_to_json(claim.review_decisions),

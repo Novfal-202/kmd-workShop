@@ -62,6 +62,22 @@ npm run dev
 1. Resize the viewport to a common mobile width (e.g., 375px) or use browser device emulation.
 2. **Expected**: the claim form, receipt attachment, status badges, and claim history remain fully usable with no horizontal scrolling and no obscured controls.
 
+## Scenario 7 — Employee name required and shown in history (FR-001, FR-018)
+
+1. Attempt to submit a claim with the "Your name" field left empty.
+2. **Expected**: submission is blocked with an inline "Your name is required" error, same as any other required field.
+3. Fill in a name and submit successfully.
+4. **Expected**: the claim history table's "Employee" column shows the exact name entered.
+
+## Scenario 8 — Claim history density, submit button placement, page whitespace (FR-019, FR-020, FR-021)
+
+1. Load the claim history table with several claims, at least one carrying multiple violation tags.
+2. **Expected**: each row's status badge and violation tags are clearly separated from the row above/below — no visual crowding.
+3. View the "New Claim" screen.
+4. **Expected**: the submit button appears as an attached footer bar directly below the form's fields, not as an isolated button surrounded by a large empty gap.
+5. View both the "New Claim" and "Claim History" screens on a tall desktop viewport with comparatively short content.
+6. **Expected**: the page does not read as mostly empty space; the card's own internal margins (fixed in the prior polish round) are unchanged.
+
 ## Traceability
 
 | Scenario | Requirements exercised |
@@ -72,3 +88,5 @@ npm run dev
 | 4 | FR-010, FR-011, FR-012, SC-002, SC-006 |
 | 5 | FR-013, FR-014 |
 | 6 | FR-015, SC-005 |
+| 7 | FR-001, FR-018 |
+| 8 | FR-019, FR-020, FR-021 |

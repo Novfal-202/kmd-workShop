@@ -17,6 +17,7 @@ Mirrors `components.schemas.ExpenseClaim` in `specs/001-expense-policy-engine/co
 | `submission_date` | `string` (date-time) | |
 | `receipt_attached` | `boolean` | |
 | `receipt_id` | `string?` (uuid) | New (FR-004) — set when a receipt was uploaded/linked via `POST /receipts` |
+| `employee_name` | `string?` | New (FR-001/FR-018, research.md §9) — interim, portal-captured identity; optional on the wire (backend default `""`), required client-side |
 | `status` | `"auto_approved" \| "pending_review" \| "approved" \| "rejected" \| "needs_information" \| "withdrawn"` | |
 | `violations` | `ViolationReasonApi[]` | |
 
@@ -43,6 +44,7 @@ The React Hook Form values, persisted to `sessionStorage` per FR-016.
 
 | Field | Type | Validation rule (FR-002, FR-003) |
 |---|---|---|
+| `employeeName` | `string` | Non-empty (FR-018) |
 | `amount` | `string` (raw input) → parsed `number` | Must parse to a number `> 0` |
 | `category` | `string` | Non-empty, one of the known categories supplied by the portal's category list |
 | `expenseDate` | `string` (ISO date) | Must be a valid date, not in the future |
