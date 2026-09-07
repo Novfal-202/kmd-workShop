@@ -20,6 +20,7 @@ describe('apiClient — normalizes the backend amount field', () => {
     server.use(http.post('/claims', () => HttpResponse.json(claimWithStringAmount, { status: 201 })))
 
     const claim = await submitClaim({
+      employee_name: 'Jane Employee',
       category: 'meals',
       amount: 15.5,
       expense_date: '2026-01-01',

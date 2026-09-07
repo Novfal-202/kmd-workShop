@@ -19,6 +19,7 @@ export function NewClaimPage() {
     setLastDraft(draft)
     try {
       await submitClaimMutation.mutateAsync({
+        employee_name: draft.employeeName,
         category: draft.category,
         amount: Number(draft.amount),
         description: draft.description,
@@ -48,7 +49,7 @@ export function NewClaimPage() {
         : 'idle'
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+    <div className="mx-auto max-w-3xl space-y-6 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
       <h1 className="text-xl font-semibold">Submit a new expense claim</h1>
 
       {needsReauth && (
@@ -80,7 +81,7 @@ export function NewClaimPage() {
         </div>
       )}
 
-      <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <ClaimForm
           defaultValues={
             lastDraft ?? (persistedDraft ? { ...persistedDraft } : undefined)
@@ -89,6 +90,7 @@ export function NewClaimPage() {
           uploadReceipt={uploadReceipt}
           onFieldsChange={(values) => {
             saveDraft({
+              employeeName: values.employeeName ?? '',
               amount: values.amount ?? '',
               category: values.category ?? '',
               expenseDate: values.expenseDate ?? '',

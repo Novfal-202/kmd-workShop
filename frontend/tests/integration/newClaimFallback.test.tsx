@@ -30,7 +30,8 @@ describe('New claim submission — unrecognized status fallback (FR-017)', () =>
     const user = userEvent.setup()
     renderWithProviders(<NewClaimPage />)
 
-    await user.type(screen.getByLabelText('Amount'), '20')
+    await user.type(screen.getByLabelText('Your name'), 'Jane Employee')
+  await user.type(screen.getByLabelText('Amount'), '20')
     await user.selectOptions(screen.getByLabelText('Category'), 'meals')
     await user.type(screen.getByLabelText('Expense date'), '2026-01-01')
     await user.click(screen.getByRole('button', { name: /submit claim/i }))

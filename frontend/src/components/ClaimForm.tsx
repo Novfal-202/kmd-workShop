@@ -36,6 +36,7 @@ export function ClaimForm({
     resolver: zodResolver(claimFormSchema),
     mode: 'onChange',
     defaultValues: {
+      employeeName: '',
       amount: '',
       category: '',
       expenseDate: '',
@@ -51,7 +52,13 @@ export function ClaimForm({
   useEffect(() => {
     onFieldsChange?.(watchedValues)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [watchedValues.amount, watchedValues.category, watchedValues.expenseDate, watchedValues.description])
+  }, [
+    watchedValues.employeeName,
+    watchedValues.amount,
+    watchedValues.category,
+    watchedValues.expenseDate,
+    watchedValues.description,
+  ])
 
   const amountNumber = Number(watchedValues.amount)
   const receiptRequired =
@@ -59,11 +66,30 @@ export function ClaimForm({
 
   return (
     <form
-      className="space-y-4"
       onSubmit={handleSubmit(async (values) => {
         await onSubmit(values)
       })}
     >
+      <div className="space-y-4">
+      <div>
+        <label htmlFor="employeeName" className="block text-sm font-medium">
+          Your name
+        </label>
+        <input
+          id="employeeName"
+          type="text"
+          className="mt-1 w-full rounded border px-3 py-2"
+          aria-invalid={!!errors.employeeName}
+          aria-describedby={errors.employeeName ? 'employeeName-error' : undefined}
+          {...register('employeeName')}
+        />
+        {errors.employeeName && (
+          <p id="employeeName-error" role="alert" className="mt-1 text-sm text-red-600">
+            {errors.employeeName.message}
+          </p>
+        )}
+      </div>
+
       <div>
         <label htmlFor="amount" className="block text-sm font-medium">
           Amount
@@ -172,14 +198,20 @@ export function ClaimForm({
           </p>
         )}
       </div>
+      </div>
 
-      <button
-        type="submit"
-        disabled={!isValid || submitting || receiptUploading}
-        className="rounded bg-slate-800 px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
+      <div
+        data-testid="submit-bar"
+        className="-mx-6 -mb-6 mt-6 flex justify-end border-t border-slate-200 bg-slate-50 px-6 py-4 sm:-mx-8 sm:-mb-8 sm:px-8"
       >
-        {submitting ? 'Submitting…' : receiptUploading ? 'Uploading receipt…' : 'Submit claim'}
-      </button>
+        <button
+          type="submit"
+          disabled={!isValid || submitting || receiptUploading}
+          className="rounded bg-slate-800 px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {submitting ? 'Submitting…' : receiptUploading ? 'Uploading receipt…' : 'Submit claim'}
+        </button>
+      </div>
     </form>
   )
 }

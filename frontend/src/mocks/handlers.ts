@@ -23,6 +23,7 @@ export const handlers = [
       submission_date: new Date().toISOString(),
       receipt_attached: Boolean(body.receipt_attached),
       receipt_id: typeof body.receipt_id === 'string' ? body.receipt_id : undefined,
+      employee_name: typeof body.employee_name === 'string' ? body.employee_name : undefined,
       status: 'auto_approved',
       violations: [],
     }

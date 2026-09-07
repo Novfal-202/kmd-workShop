@@ -47,10 +47,32 @@ describe('ClaimForm', () => {
     expect(screen.getByRole('button', { name: /submit claim/i })).toBeDisabled()
   })
 
+  it('shows an inline error when the employee name is left empty', async () => {
+    const user = userEvent.setup()
+    renderForm()
+
+    await user.type(screen.getByLabelText('Amount'), '20')
+    await user.selectOptions(screen.getByLabelText('Category'), 'meals')
+    await user.type(screen.getByLabelText('Expense date'), '2026-01-01')
+    await user.type(screen.getByLabelText('Your name'), 'a')
+    await user.clear(screen.getByLabelText('Your name'))
+
+    expect(await screen.findByText(/your name is required/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /submit claim/i })).toBeDisabled()
+  })
+
+  it('renders the submit control inside its attached footer-bar container', () => {
+    renderForm()
+
+    const submitBar = screen.getByTestId('submit-bar')
+    expect(submitBar).toContainElement(screen.getByRole('button', { name: /submit claim/i }))
+  })
+
   it('clears all errors and enables submit once every field is valid', async () => {
     const user = userEvent.setup()
     renderForm()
 
+    await user.type(screen.getByLabelText('Your name'), 'Jane Employee')
     await user.type(screen.getByLabelText('Amount'), '20')
     await user.selectOptions(screen.getByLabelText('Category'), 'meals')
     await user.type(screen.getByLabelText('Expense date'), '2026-01-01')

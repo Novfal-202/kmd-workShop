@@ -105,3 +105,32 @@ frontend/                  # New: this feature
 ## Complexity Tracking
 
 *No unjustified violations — table omitted. The one piece of new scope (the `/receipts` backend endpoint) is tracked and justified in the Constitution Check row for Article I.2 and in `research.md` §6, not as a complexity/violation trade-off.*
+
+## Amendment (2026-09-07): Employee Name, Table History, and Layout Polish (FR-018..FR-021)
+
+Two `/speckit-clarify` sessions after this feature's original delivery added FR-018 (interim
+employee-name capture), amended FR-013 (table layout) and FR-001, and added FR-019..FR-021 (claim
+history row density, submit-button integration, page whitespace balance). This amendment covers
+that work without regenerating the artifacts above, since no new entity, contract, or dependency is
+introduced.
+
+**Status**: FR-018 (employee name field) and FR-013's table conversion are already implemented and
+tested. FR-019, FR-020, and FR-021 (this plan's remaining scope) are not yet implemented.
+
+**Technical Context delta**: No new dependencies, no new Technical Context values change — this is
+a Tailwind class-level styling amendment plus one additive backend field (research.md §9), not a
+new architectural surface.
+
+**Constitution re-check**: No new gate implications. Article I.2 (no unrequested scope) is
+satisfied by scoping FR-019..FR-021 exactly to the three complaints raised in clarify, per
+research.md §10 — the card/table's internal padding from the prior polish round is explicitly
+preserved, not reopened.
+
+**Files affected** (extends the Project Structure above, no new files):
+
+```text
+frontend/src/components/ClaimHistoryList.tsx   # FR-019: row vertical spacing
+frontend/src/components/ClaimForm.tsx          # FR-020: submit button becomes an attached footer bar
+frontend/src/pages/NewClaimPage.tsx            # FR-020 (submit bar container), FR-021 (page padding)
+frontend/src/pages/ClaimHistoryPage.tsx        # FR-021: page padding
+```

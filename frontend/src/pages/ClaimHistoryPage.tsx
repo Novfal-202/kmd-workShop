@@ -5,7 +5,7 @@ export function ClaimHistoryPage() {
   const { data, isLoading, isError, error } = useClaimHistory()
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+    <div className="mx-auto max-w-3xl space-y-4 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
       <h1 className="text-xl font-semibold">Your claim history</h1>
       {isLoading && <p className="text-sm text-slate-500">Loading your claims…</p>}
       {isError && (

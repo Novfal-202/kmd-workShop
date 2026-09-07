@@ -48,6 +48,38 @@
 - **Rationale**: `sessionStorage` survives a re-auth redirect/reload within the same tab without needing new backend storage, satisfying FR-016 with no server-side change.
 - **Alternatives considered**: In-memory only (rejected — lost on a full page reload, which a re-auth redirect may trigger); persisting to the backend as a draft entity (rejected — no such capability exists or is requested; out of scope per spec Assumptions).
 
+## 9. Interim employee-name capture (FR-001, FR-018)
+
+- **Decision**: `employee_name` is added as an optional, default-`""` field on `001`'s
+  `ExpenseClaimInput`/`ExpenseClaim` models and `claims` table (with an idempotent `ALTER TABLE`
+  migration guard for the pre-existing dev database), while the portal's own Zod schema makes it
+  *required* client-side.
+- **Rationale**: Making the field backend-optional avoids breaking the ~20 already-passing `001`
+  backend tests and the protected `tests/fixtures/synthetic_expenses.json` fixture; "required"
+  only needs to be true from the employee's perspective, which the client-side Zod schema already
+  enforces (the same pattern FR-002/FR-003 use for every other required field).
+- **Alternatives considered**: A hard-required backend field (rejected — large, unnecessary blast
+  radius across an unrelated, already-shipped test suite for a field whose only real requirement
+  is "the portal won't let you submit without it").
+
+## 10. Claim history table density, submit button placement, and page whitespace (FR-019, FR-020, FR-021)
+
+- **Decision**: Increase `<td>`/`<tr>` vertical padding in `ClaimHistoryList` (`py-3` → a larger
+  value) so status badges and violation tags read as clearly separated between rows; restyle the
+  claim form's submit control as a bottom action bar directly attached to the form (e.g. a
+  top-bordered footer strip inside the same card) rather than a button floating below its own gap
+  of whitespace; reduce the outer page wrapper's vertical padding (`py-8`/`sm:py-10`) on
+  `NewClaimPage`/`ClaimHistoryPage` so a short page doesn't read as mostly empty space, while
+  leaving the card's own internal padding (`p-6`/`sm:p-8`) — which fixed the earlier "no margin"
+  complaint — untouched, per the clarify session's explicit confirmation.
+- **Rationale**: These are the three concrete complaints raised in the `/speckit-clarify` session
+  of this date; the clarify answer explicitly distinguishes "excess empty page area" (to reduce)
+  from "internal card/table padding" (to keep), so the fix must touch page-level vertical rhythm
+  and the submit button's own container, not undo the earlier margin work.
+- **Alternatives considered**: Reducing the card's internal padding instead (rejected — directly
+  contradicted by the clarify session's answer, and would reintroduce the original "cramped, no
+  margin" complaint this iteration is not asking to bring back).
+
 ## Outstanding NEEDS CLARIFICATION
 
-None — all Technical Context unknowns are resolved above.
+None — all Technical Context unknowns are resolved above (including this amendment's).

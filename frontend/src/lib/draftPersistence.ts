@@ -1,6 +1,7 @@
 const DRAFT_STORAGE_KEY = 'expense-portal:new-claim-draft'
 
 export interface PersistedDraft {
+  employeeName: string
   amount: string
   category: string
   expenseDate: string
